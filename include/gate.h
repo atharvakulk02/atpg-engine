@@ -12,7 +12,8 @@ enum GateType{
     XNOR,
     NOT,
     INPUT,
-    OUTPUT
+    OUTPUT,
+    BUF
 };
 
 enum LogicValue{

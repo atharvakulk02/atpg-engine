@@ -14,7 +14,7 @@ GateType stringToGateType(string s) {
     if (s == "XOR")  return XOR;
     if (s == "XNOR") return XNOR;
     if (s == "NOT")  return NOT;
-    if (s == "BUFF") return NOT; // buffer, treat as wire
+    if (s == "BUF") return BUF; // buffer, treat as wire
     return INPUT; // fallback
 }
 
@@ -23,7 +23,7 @@ Circuit parse(string fileName){
     ifstream file(fileName);
     string line;
     while (getline(file,line)){
-        if (line.find("#")!=string::npos){
+        if ((line.find("#")!=string::npos) or (line.empty())){
 
         }else if(line.find("INPUT")!=string::npos){
             int start=line.find("(")+1;
