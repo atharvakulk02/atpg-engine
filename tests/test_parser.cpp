@@ -2,6 +2,7 @@
 #include "../include/circuit.h"
 #include "../include/gate.h"
 #include "../include/parser.h"
+#include "../include/fault.h"
 #include <fstream>
 using namespace std;
 
@@ -20,6 +21,7 @@ string Backtostring(GateType gt){
         default : return "UNKNOWN";
     }
 }
+
 
 int main(){
     Circuit test_p;
@@ -42,5 +44,7 @@ int main(){
         out<<")";
         out<<endl;
     }
+    vector<Fault> faultlist=generateFaults(test_p);
+    out<<"Total faults = "<<faultlist.size();
     return 0;
 }
