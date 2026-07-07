@@ -105,36 +105,45 @@ bool justify(map<string,LogicValue>& wireVal, Circuit& circuit) {
             
             for (string& inp : gate.inputs) {
                 if (wireVal[inp] != X) continue;
+                
+                LogicValue newVal = X;
                 switch(gate.type) {
                     case AND:
                     case NAND:
-                        if (g_target == 1 && b_target == 1) 
-                            wireVal[inp] = ONE;
-                        else if (g_target == 0 && b_target == 0) 
-                            wireVal[inp] = ZERO;
+                        if (g_target == 1 && b_target == 1)
+                            newVal = ONE;
+                        else if (g_target == 0 && b_target == 0)
+                            newVal = ZERO;
                         else
-                            wireVal[inp] = ONE;
+                            newVal = ONE;
                         break;
                     case OR:
                     case NOR:
                         if (g_target == 1 && b_target == 1)
-                            wireVal[inp] = ONE;
+                            newVal = ONE;
                         else if (g_target == 0 && b_target == 0)
-                            wireVal[inp] = ZERO;
+                            newVal = ZERO;
                         else
-                            wireVal[inp] = ZERO;
+                            newVal = ZERO;
                         break;
                     case XOR:
                     case XNOR:
-                        wireVal[inp] = ZERO;
+                        newVal = ZERO;
                         break;
                     case NOT:
                     case BUF:
-                        wireVal[inp] = (g_target == 1) ? ONE : ZERO;
+                        newVal = (g_target == 1) ? ONE : ZERO;
                         break;
                     default:
                         break;
                 }
+                if (newVal == X) continue;
+                if (wireVal[inp] != X) {
+                    if (newVal == ONE && wireVal[inp] != ONE && wireVal[inp] != D) return false;
+                    if (newVal == ZERO && wireVal[inp] != ZERO && wireVal[inp] != D_BAR) return false;
+                }
+                
+                wireVal[inp] = newVal;
                 changed = true;
             }
         }
@@ -164,15 +173,53 @@ TestPattern datpg(Fault f, Circuit circuit){
             }
         }
     }
+    if (find(circuit.outputs.begin(), circuit.outputs.end(), f.location) != circuit.outputs.end()) {
+    justify(wireVal, circuit);
+    TestPattern tp;
+    tp.f = f;
+    tp.f.status = detected;
+    for (string inp : circuit.inputs) {
+        LogicValue v = wireVal[inp];
+        if (v == D) v = ONE;
+        if (v == D_BAR) v = ZERO;
+        tp.patterns[inp] = v;
+    }
+    return tp;
+    }
     while (!dfrontier.empty()){
         Gate g=circuit.gates[dfrontier[0]];
         LogicValue result =computeOutput(g,wireVal);
         wireVal[g.name]=result;
         if ((result==D||result==D_BAR)&&(find(circuit.outputs.begin(),circuit.outputs.end(),g.name)!=circuit.outputs.end())){
-
+            bool justified = justify(wireVal, circuit);
+            if (justified) {
+                TestPattern tp;
+                tp.f = f;
+                tp.f.status = detected;
+                for (string inp : circuit.inputs){
+                    LogicValue v = wireVal[inp];
+                    if (v == D) v = ONE;
+                    if (v == D_BAR) v = ZERO;
+                    tp.patterns[inp] = v;
+                }
+            return tp;
+            }
         }
-        // Fault erase dfrontier.erase(dfrontier.begin());
+        dfrontier.erase(dfrontier.begin());
+        for (auto const& g : circuit.gates) {
+             if (wireVal[g.first] != X) continue;
+                 for (auto const& i : g.second.inputs) {
+                     if (wireVal[i] == D || wireVal[i] == D_BAR) {
+                         if (find(dfrontier.begin(), dfrontier.end(), g.first) == dfrontier.end()) {
+                            dfrontier.push_back(g.first);
+                        }
+                    break;
+                    }
+                }
+        }
     }
+    TestPattern empty;
+    return empty;
 }
 vector<TestPattern> runATPG(vector<Fault> faults, Circuit circuit){
     vector<TestPattern> atpg_result;
