@@ -10,7 +10,8 @@ enum saval{
 enum detection{
     detected,
     undetected,
-    redundant
+    redundant,   // search completed and proved no test pattern exists
+    aborted      // per-fault search budget exceeded before a verdict was reached
 };
 
 struct Fault{

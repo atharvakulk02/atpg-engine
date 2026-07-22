@@ -10,4 +10,3 @@ struct TestPattern{
 
 TestPattern datpg(Fault f, Circuit circuit);
 vector<TestPattern> runATPG(vector<Fault> faults, Circuit circuit);
-bool justify(map<string,LogicValue>& wireVal, Circuit& circuit);

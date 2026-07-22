@@ -35,24 +35,40 @@ int main(int argc, char* argv[]) {
 
     vector<TestPattern> patterns = runATPG(faults, circuit);
 
-    int det_count = 0;
+    int det_count = 0, redundant_count = 0, aborted_count = 0;
     ofstream out("results.txt");
     out << "ATPG Results for: " << fileName << endl;
     out << "================================" << endl;
 
     for (TestPattern& tp : patterns) {
-        if (tp.patterns.empty()) continue;
-        det_count++;
-        out << "Fault: " << tp.f.location << " SA" << (tp.f.val == SA0 ? "0" : "1") << endl;
-        out << "Pattern: ";
-        for (auto& p : tp.patterns) {
-            out << p.first << "=" << logicToString(p.second) << " ";
+        if (tp.f.status == detected) {
+            det_count++;
+            out << "Fault: " << tp.f.location << " SA" << (tp.f.val == SA0 ? "0" : "1") << endl;
+            out << "Pattern: ";
+            for (auto& p : tp.patterns) {
+                out << p.first << "=" << logicToString(p.second) << " ";
+            }
+            out << endl;
+        } else if (tp.f.status == redundant) {
+            redundant_count++;
+        } else if (tp.f.status == aborted) {
+            aborted_count++;
         }
-        out << endl;
     }
 
     out << "================================" << endl;
     out << "Detected: " << det_count << "/" << faults.size() << endl;
+    out << "Redundant (proven untestable): " << redundant_count << "/" << faults.size() << endl;
+    out << "Aborted (search budget exceeded): " << aborted_count << "/" << faults.size() << endl;
+    if (aborted_count > 0) {
+        out << "Aborted faults: ";
+        for (TestPattern& tp : patterns) {
+            if (tp.f.status == aborted) {
+                out << tp.f.location << " SA" << (tp.f.val == SA0 ? "0" : "1") << "  ";
+            }
+        }
+        out << endl;
+    }
     cout << "Done. Results written to results.txt" << endl;
 
     return 0;

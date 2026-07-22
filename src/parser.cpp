@@ -14,7 +14,7 @@ GateType stringToGateType(string s) {
     if (s == "XOR")  return XOR;
     if (s == "XNOR") return XNOR;
     if (s == "NOT")  return NOT;
-    if (s == "BUF") return BUF; // buffer, treat as wire
+    if (s == "BUF" || s == "BUFF") return BUF; // buffer, treat as wire
     return INPUT; // fallback
 }
 
